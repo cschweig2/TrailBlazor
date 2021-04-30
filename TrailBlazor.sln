@@ -1,0 +1,31 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.30907.101
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{F9186D31-B1C9-4B92-801F-04AA976701EF}"
+	ProjectSection(SolutionItems) = preProject
+		.gitignore = .gitignore
+		pull_request_template.md = pull_request_template.md
+	EndProjectSection
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TrailBlazor", "TrailBlazor\TrailBlazor.csproj", "{97F3A495-634F-4611-8B38-21A26E49E26E}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{97F3A495-634F-4611-8B38-21A26E49E26E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{97F3A495-634F-4611-8B38-21A26E49E26E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{97F3A495-634F-4611-8B38-21A26E49E26E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{97F3A495-634F-4611-8B38-21A26E49E26E}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {9B091445-060A-447F-93C0-F0464FABFBA8}
+	EndGlobalSection
+EndGlobal

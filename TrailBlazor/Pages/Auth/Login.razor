@@ -1,0 +1,121 @@
+﻿@page "/login"
+@layout AuthLayout
+@using Microsoft.JSInterop
+@using Newtonsoft.Json
+@using System.Timers;
+@inject NavigationManager navigationManager
+@inject Blazored.LocalStorage.ILocalStorageService localStorage
+@inject Blazored.LocalStorage.ISyncLocalStorageService getLocalStorage
+@inject StateProvider authStateProvider
+@inject IJSRuntime JS
+@using Radzen
+
+<div class="row center-element">
+    <div class="col-xl-6">
+        <div class="row">
+            <div class="col">
+                <RadzenTemplateForm TItem="LoginRequest" Data=@loginRequest Submit=@OnSubmit InvalidSubmit=@OnInvalidSubmit>
+                    <RadzenFieldset Text="Login">
+                        <div class="row" style="margin-bottom: 48px">
+                            <div class="col-md-4 align-right">
+                                <RadzenLabel Text="User Name" />
+                            </div>
+                            <div class="col">
+                                <RadzenTextBox style="display: block" Name="LoginEmail" @bind-Value=@loginRequest.UserName />
+                                <RadzenRequiredValidator Component="LoginEmail" Text="Email is required" Popup=@popup Style="position: absolute" />
+                            </div>
+                        </div>
+                        <div class="row" style="margin-bottom: 48px">
+                            <div class="col-md-4">
+                                <RadzenLabel Text="Password" />
+                            </div>
+                            <div class="col">
+                                <RadzenTextBox style="display: block" type="password" Name="LoginPassword" @bind-Value=@loginRequest.Password />
+                                <RadzenRequiredValidator Component="LoginPassword" Text="Password is required" Popup=@popup Style="position: absolute" />
+                            </div>
+                        </div>
+                        <RadzenButton ButtonType="ButtonType.Submit" Text="Submit" Style="background-color: #EC3840" />
+                    </RadzenFieldset>
+                </RadzenTemplateForm>
+                <label class="text-danger">@error</label>
+                <NavLink href="register">
+                    <h6 class="font-weight-normal text-center">Create account</h6>
+                </NavLink>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code{
+    LoginRequest loginRequest { get; set; } = new LoginRequest();
+    CurrentUser currentUser { get; set; } = new CurrentUser();
+    string error { get; set; }
+    bool popup;
+    private static System.Timers.Timer aTimer { get; set; }
+    FirebaseUserTokens firebaseUserTokens { get; set; }
+
+    #region SubmissionHandlers
+
+    async Task OnSubmit()
+    {
+        error = null;
+        try
+        {
+            var result = await JS.InvokeAsync<string>("firebaseEmailSignIn", loginRequest.UserName, loginRequest.Password);
+            var userJSON = await JS.InvokeAsync<string>("firebaseGetCurrentUser");
+            if (userJSON != null)
+            {
+                FirebaseUser user = JsonConvert.DeserializeObject<FirebaseUser>(userJSON);
+                CurrentUser.IsAuthenticated = true;
+                CurrentUser.UserName = user.Email;
+                await localStorage.SetItemAsync("userId", user.Uid);
+                await localStorage.SetItemAsync("refreshToken", user.StsTokenManager.RefreshToken);
+                await localStorage.SetItemAsync("accessToken", user.StsTokenManager.AccessToken);
+                SetTimer();
+                authStateProvider.ManageUser();
+                navigationManager.NavigateTo("");
+            }
+            else
+            {
+                error = result;
+            }
+        }
+        catch (Exception ex)
+        {
+            error = ex.Message;
+        }
+    }
+
+    void OnInvalidSubmit(FormInvalidSubmitEventArgs args)
+    {
+        error = "Invalid Submission";
+    }
+    #endregion
+
+    #region Timers
+    public void SetTimer()
+    {
+        aTimer = new System.Timers.Timer(3000000);
+        aTimer.Elapsed += new ElapsedEventHandler(OnTimedEvent);
+        aTimer.AutoReset = true;
+        aTimer.Enabled = true;
+    }
+
+    public async void OnTimedEvent(object source, ElapsedEventArgs e)
+    {
+        if (CurrentUser.IsAuthenticated)
+        {
+            string refreshToken = getLocalStorage.GetItem<string>("refreshToken");
+            var firebaseTokens = await JS.InvokeAsync<string>("getRefreshToken", refreshToken);
+            firebaseUserTokens = JsonConvert.DeserializeObject<FirebaseUserTokens>(firebaseTokens);
+            await localStorage.SetItemAsync("refreshToken", firebaseUserTokens.RefreshToken);
+            await localStorage.SetItemAsync("accessToken", firebaseUserTokens.AccessToken);
+            Console.WriteLine("Tokens refreshed");
+        }
+        else
+        {
+            aTimer.Stop();
+        }
+    }
+    #endregion
+}

@@ -1,0 +1,93 @@
+﻿@page "/register"
+@layout AuthLayout
+@using Radzen
+@using Newtonsoft.Json 
+@inject IJSRuntime JS
+@inject NavigationManager navigationManager
+@inject StateProvider authStateProvider
+@inject Blazored.LocalStorage.ILocalStorageService localStorage
+
+<div class="row center-element">
+    <div class="col-xl-6">
+        <div class="row">
+            <div class="col">
+                <RadzenTemplateForm TItem="RegisterRequest" Data=@registerRequest Submit=@OnSubmit InvalidSubmit=@OnInvalidSubmit>
+                    <RadzenFieldset Text="Register">
+                        <div class="row" style="margin-bottom: 48px">
+                            <div class="col-md-4 align-right">
+                                <RadzenLabel Text="User Name" />
+                            </div>
+                            <div class="col">
+                                <RadzenTextBox style="display: block" Name="RegisterEmail" @bind-Value=@registerRequest.UserName />
+                                <RadzenRequiredValidator Component="RegisterEmail" Text="Email is required" Popup=@popup Style="position: absolute" />
+                            </div>
+                        </div>
+                        <div class="row" style="margin-bottom: 48px">
+                            <div class="col-md-4">
+                                <RadzenLabel Text="Password" />
+                            </div>
+                            <div class="col">
+                                <RadzenTextBox style="display: block" type="password" Name="RegisterPassword" @bind-Value=@registerRequest.Password />
+                                <RadzenRequiredValidator Component="RegisterPassword" Text="Password is required" Popup=@popup Style="position: absolute" />
+                            </div>
+                        </div>
+                        <div class="row" style="margin-bottom: 48px">
+                            <div class="col-md-4">
+                                <RadzenLabel Text="Repeat Password" />
+                            </div>
+                            <div class="col">
+                                <RadzenPassword style="display: block" Name="RepeatPassword" @bind-Value=@registerRequest.PasswordConfirm />
+                                <RadzenRequiredValidator Component="RepeatPassword" Text="Repeat your password" Popup=@popup Style="position: absolute" />
+                                <RadzenCompareValidator Visible=@(!string.IsNullOrEmpty(registerRequest.PasswordConfirm)) Value=@registerRequest.Password Component="RepeatPassword" Text="Passwords should be the same" Popup=@popup Style="position: absolute" />
+                            </div>
+                        </div>
+                        <RadzenButton ButtonType="ButtonType.Submit" Style="background-color: #EC3840" Text="Submit" />
+                    </RadzenFieldset>
+                </RadzenTemplateForm>
+                <label class="text-danger">@error</label>
+                <NavLink href="login">
+                    <h6 class="font-weight-normal text-center">Already have an account? Click here to login</h6>
+                </NavLink>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+@code {
+    RegisterRequest registerRequest { get; set; } = new RegisterRequest();
+    CurrentUser currentUser { get; set; } = new CurrentUser();
+    string error { get; set; }
+    bool popup;
+
+    async Task OnSubmit()
+    {
+        try
+        {
+            var result = await JS.InvokeAsync<string>("firebaseCreateUser", registerRequest.UserName, registerRequest.Password);
+            var userJSON = await JS.InvokeAsync<string>("firebaseGetCurrentUser");
+            if (userJSON != null)
+            {
+                FirebaseUser user = JsonConvert.DeserializeObject<FirebaseUser>(userJSON);
+                CurrentUser.IsAuthenticated = true;
+                CurrentUser.UserName = user.Email;
+                await localStorage.SetItemAsync("user", currentUser);
+                authStateProvider.ManageUser();
+                navigationManager.NavigateTo("");
+            }
+            else
+            {
+                error = result;
+            }
+        }
+        catch (Exception ex)
+        {
+            error = ex.Message;
+        }
+    }
+
+    void OnInvalidSubmit(FormInvalidSubmitEventArgs args)
+    {
+        error = "Invalid Submission";
+    }
+}

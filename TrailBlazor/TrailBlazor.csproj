@@ -1,0 +1,31 @@
+﻿<Project Sdk="Microsoft.NET.Sdk.BlazorWebAssembly">
+
+  <PropertyGroup>
+    <TargetFramework>net5.0</TargetFramework>
+    <ServiceWorkerAssetsManifest>service-worker-assets.js</ServiceWorkerAssetsManifest>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Content Remove="Pages\Register.razor" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Remove="Pages\NewFile.txt" />
+  </ItemGroup>
+
+  <ItemGroup>
+	<PackageReference Include="Blazored.LocalStorage" Version="3.0.0" />
+	<PackageReference Include="Google.Apis.Auth" Version="1.51.0" />
+	<PackageReference Include="Microsoft.AspNetCore.Authorization" Version="5.0.5" />
+    <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly" Version="5.0.4" />
+    <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.DevServer" Version="5.0.4" PrivateAssets="all" />
+    <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.Authentication" Version="5.0.4" />
+    <PackageReference Include="Radzen.Blazor" Version="3.1.10" />
+    <PackageReference Include="System.Net.Http.Json" Version="5.0.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ServiceWorker Include="wwwroot\service-worker.js" PublishedContent="wwwroot\service-worker.published.js" />
+  </ItemGroup>
+
+</Project>

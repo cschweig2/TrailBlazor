@@ -1,0 +1,22 @@
+﻿@page "/admin"
+@inject IJSRuntime JS
+@attribute [Authorize(Roles = "Admin")]
+
+<h3>Welcome Admin!</h3>
+
+<AuthorizeView>
+    <ul>
+        @foreach (var claim in context.User.Claims)
+        {
+            <li>@claim.Type: @claim.Value</li>
+        }
+    </ul>
+    <RadzenButton Click="@OnClick" Text="Admins Click Here" Style="background-color: #EC3840" />
+</AuthorizeView>
+
+@code {
+    async void OnClick()
+    {
+        await JS.InvokeVoidAsync("JSAlert");
+    }
+}

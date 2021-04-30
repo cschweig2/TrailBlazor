@@ -1,0 +1,49 @@
+﻿@inherits LayoutComponentBase
+@inject NavigationManager navigationManager
+@inject StateProvider authStateProvider
+@inject Blazored.LocalStorage.ILocalStorageService localStorage
+@inject IJSRuntime JS
+@using TrailBlazor.Helpers
+
+<AuthorizeView>
+    <div class="page">
+        <div class="sidebar">
+            <NavMenu />
+        </div>
+        <div class="main">
+            <div class="top-row">
+                Hello, @context.User.Identity.Name!
+                <button type="button" class="btn btn-link ml-md-auto" @onclick="@LogoutClick">Logout</button>
+            </div>
+            <div class="content px-4">
+                @Body
+            </div>
+        </div>
+    </div>
+</AuthorizeView>
+
+@code {
+    [CascadingParameter]
+    Task<AuthenticationState> AuthenticationState { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        await JS.InitializeInactivityTimer(DotNetObjectReference.Create(this)); // pass an instance of MainLayout
+        if (!(await AuthenticationState).User.Identity.IsAuthenticated)
+        {
+            navigationManager.NavigateTo("/login");
+        }
+    }
+
+    [JSInvokable]
+    public async Task LogoutClick()
+    {
+        var signOutState = await JS.InvokeAsync<bool>("firebaseSignOut");
+        CurrentUser.UserName = null;
+        CurrentUser.IsAuthenticated = signOutState;
+        await localStorage.SetItemAsync<string>("refreshToken", null);
+        await localStorage.SetItemAsync<string>("accessToken", null);
+        authStateProvider.ManageUser();
+        navigationManager.NavigateTo("/login");
+    }
+}

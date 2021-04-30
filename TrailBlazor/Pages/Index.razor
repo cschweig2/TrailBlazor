@@ -1,0 +1,36 @@
+﻿@page "/"
+@using Newtonsoft.Json
+@layout MainLayout
+@inject StateProvider authStateProvider
+@inject IJSRuntime JS
+@inject Blazored.LocalStorage.ISyncLocalStorageService getLocalStorage
+@inject Blazored.LocalStorage.ILocalStorageService localStorage
+
+<AuthorizeView>
+    <Authorized>
+        <h1>Hello @context.User.Identity.Name!</h1>
+        <p>Welcome to the TrailBlazor authentication demo for Blazor</p>
+        <RadzenButton Click="@GetNewToken" Text="Click me for new token" Style="background-color: #EC3840" />
+    </Authorized>
+    <Authorizing>
+        <h1>Loading ...</h1>
+    </Authorizing>
+</AuthorizeView>
+
+@code {
+
+    public string refreshToken { get; set; }
+    FirebaseUser firebaseUser { get; set; }
+    FirebaseUserTokens firebaseUserTokens { get; set; }
+
+    public async void GetNewToken()
+    {
+        refreshToken = getLocalStorage.GetItem<string>("refreshToken");
+        string response = await JS.InvokeAsync<string>("getRefreshToken", refreshToken);
+        firebaseUserTokens = JsonConvert.DeserializeObject<FirebaseUserTokens>(response);
+        string newRefreshToken = firebaseUserTokens.RefreshToken;
+        string newAccessToken = firebaseUserTokens.AccessToken;
+        await localStorage.SetItemAsync("refreshToken", newRefreshToken);
+        await localStorage.SetItemAsync("accessToken", newAccessToken);
+    }
+}
